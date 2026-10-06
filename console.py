@@ -55,7 +55,7 @@ class HBNBCommand(cmd.Cmd):
         print(new_instance.id)
 
     def do_show(self, arg):
-        """Prints the string representation of an instance based on class and id."""
+        """Prints string representation of an instance based on class/id."""
         args = shlex.split(arg)
         if len(args) == 0:
             print("** class name missing **")
@@ -96,7 +96,7 @@ class HBNBCommand(cmd.Cmd):
             storage.save()
 
     def do_all(self, arg):
-        """Prints string representations of all instances or specified class."""
+        """Prints string representations of all instances or of a class."""
         args = shlex.split(arg)
         all_objects = storage.all()
         obj_list = []
@@ -115,7 +115,7 @@ class HBNBCommand(cmd.Cmd):
         print(obj_list)
 
     def do_update(self, arg):
-        """Updates an instance based on class name and id by adding/updating attribute."""
+        """Updates an instance based on class name and id."""
         args = shlex.split(arg)
         if len(args) == 0:
             print("** class name missing **")

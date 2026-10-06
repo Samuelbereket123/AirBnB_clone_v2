@@ -11,13 +11,21 @@ from models.review import Review
 
 
 class FileStorage:
-    """Serializes instances to a JSON file and deserializes back to instances."""
+    """Serializes instances to JSON file and deserializes back."""
 
     __file_path = "file.json"
     __objects = {}
 
-    def all(self):
-        """Returns the dictionary __objects."""
+    def all(self, cls=None):
+        """Returns the dictionary __objects, optionally filtered by cls."""
+        if cls is not None:
+            if isinstance(cls, str):
+                cls = eval(cls)
+            cls_dict = {}
+            for k, v in FileStorage.__objects.items():
+                if isinstance(v, cls):
+                    cls_dict[k] = v
+            return cls_dict
         return FileStorage.__objects
 
     def new(self, obj):
@@ -54,3 +62,14 @@ class FileStorage:
                     FileStorage.__objects[key] = classes[class_name](**val)
         except FileNotFoundError:
             pass
+
+    def delete(self, obj=None):
+        """Deletes obj from __objects if it's inside."""
+        if obj is not None:
+            key = "{}.{}".format(obj.__class__.__name__, obj.id)
+            if key in FileStorage.__objects:
+                del FileStorage.__objects[key]
+
+    def close(self):
+        """Calls reload() method for deserializing JSON file to objects."""
+        self.reload()
