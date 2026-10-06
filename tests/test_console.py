@@ -134,6 +134,94 @@ class TestConsoleCommands(unittest.TestCase):
             key = "BaseModel." + obj_id
             self.assertIn(key, storage.all())
 
+    def test_create_params_string(self):
+        """Test create with string parameters."""
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create('State name="California"')
+            obj_id = fake_out.getvalue().strip()
+            key = "State." + obj_id
+            self.assertIn(key, storage.all())
+            self.assertEqual(storage.all()[key].name, "California")
+
+    def test_create_params_string_spaces(self):
+        """Test create with string parameter containing underscores."""
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create('State name="My_little_house"')
+            obj_id = fake_out.getvalue().strip()
+            key = "State." + obj_id
+            self.assertIn(key, storage.all())
+            self.assertEqual(storage.all()[key].name, "My little house")
+
+    def test_create_params_string_escaped_quotes(self):
+        """Test create with string containing escaped quotes."""
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create('State name="My_\\"sweet\\"_home"')
+            obj_id = fake_out.getvalue().strip()
+            key = "State." + obj_id
+            self.assertIn(key, storage.all())
+            self.assertEqual(storage.all()[key].name, 'My "sweet" home')
+
+    def test_create_params_int(self):
+        """Test create with integer parameters."""
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create('Place number_rooms=4 max_guest=10')
+            obj_id = fake_out.getvalue().strip()
+            key = "Place." + obj_id
+            self.assertIn(key, storage.all())
+            self.assertEqual(storage.all()[key].number_rooms, 4)
+            self.assertEqual(storage.all()[key].max_guest, 10)
+
+    def test_create_params_float(self):
+        """Test create with float parameters."""
+        cmd = 'Place latitude=37.773972 longitude=-122.431297'
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create(cmd)
+            obj_id = fake_out.getvalue().strip()
+            key = "Place." + obj_id
+            self.assertIn(key, storage.all())
+            self.assertEqual(storage.all()[key].latitude, 37.773972)
+            self.assertEqual(storage.all()[key].longitude, -122.431297)
+
+    def test_create_params_all_types(self):
+        """Test create with all parameter types combined."""
+        cmd = (
+            'Place city_id="0001" user_id="0001" name="My_little_house" '
+            'number_rooms=4 number_bathrooms=2 max_guest=10 '
+            'price_by_night=300 latitude=37.773972 longitude=-122.431297'
+        )
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create(cmd)
+            obj_id = fake_out.getvalue().strip()
+            key = "Place." + obj_id
+            self.assertIn(key, storage.all())
+            obj = storage.all()[key]
+            self.assertEqual(obj.city_id, "0001")
+            self.assertEqual(obj.user_id, "0001")
+            self.assertEqual(obj.name, "My little house")
+            self.assertEqual(obj.number_rooms, 4)
+            self.assertEqual(obj.number_bathrooms, 2)
+            self.assertEqual(obj.max_guest, 10)
+            self.assertEqual(obj.price_by_night, 300)
+            self.assertEqual(obj.latitude, 37.773972)
+            self.assertEqual(obj.longitude, -122.431297)
+
+    def test_create_params_invalid_skipped(self):
+        """Test create skips malformed parameters."""
+        cmd = (
+            'State name="California" invalid_float=3.14.15 '
+            'unclosed="test bad'
+        )
+        with patch('sys.stdout', new=io.StringIO()) as fake_out:
+            self.cli.do_create(cmd)
+            obj_id = fake_out.getvalue().strip()
+            key = "State." + obj_id
+            self.assertIn(key, storage.all())
+            obj = storage.all()[key]
+            self.assertEqual(obj.name, "California")
+            self.assertFalse(hasattr(obj, "invalid_float"))
+            self.assertFalse(hasattr(obj, "unclosed"))
+            self.assertFalse(hasattr(obj, "bad"))
+
     def test_show_missing_class(self):
         """Test show without class name."""
         with patch('sys.stdout', new=io.StringIO()) as fake_out:

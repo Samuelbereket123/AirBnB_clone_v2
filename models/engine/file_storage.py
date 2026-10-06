@@ -20,12 +20,17 @@ class FileStorage:
         """Returns the dictionary __objects, optionally filtered by cls."""
         if cls is not None:
             if isinstance(cls, str):
-                cls = eval(cls)
-            cls_dict = {}
-            for k, v in FileStorage.__objects.items():
-                if isinstance(v, cls):
-                    cls_dict[k] = v
-            return cls_dict
+                cls_dict = {}
+                for k, v in FileStorage.__objects.items():
+                    if v.__class__.__name__ == cls:
+                        cls_dict[k] = v
+                return cls_dict
+            else:
+                cls_dict = {}
+                for k, v in FileStorage.__objects.items():
+                    if isinstance(v, cls):
+                        cls_dict[k] = v
+                return cls_dict
         return FileStorage.__objects
 
     def new(self, obj):
